@@ -1,0 +1,8 @@
+__pycache__/
+user_data.json
+*.pyc
+*.env
+.env
+*.pyo
+logs.txt
+logs.log
