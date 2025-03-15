@@ -4,22 +4,23 @@ import json
 
 class WatchDogValues():
     HASHRATE = {
-        "min": 1000,
+        "min": 0,
         "max": 10000,
         "update": lambda asic, hash: asic.update_min_hash(hash),
         "get": lambda asic: asic.min_hash,
         "unit": lambda asic: asic.get_state()['units'],
     }
+    
     TEMP = {
         "min": 25,
-        "max": 85,
+        "max": 89,
         "update": lambda asic, temp: asic.update_max_temp(temp),
         "get": lambda asic: asic.max_temp,
         "unit": lambda _: "℃",
     }
 
 
-def deserialize_miners(json_file: str = 'user_data.json') -> dict:
+def deserialize_miners(json_file: str = '/root/Scripts/python-bot/asic_check_telegram_bot_v0.5/user_data.json') -> dict:
     with open(json_file, 'r') as json_file:
         miners = json.load(json_file)
     
@@ -30,12 +31,12 @@ def deserialize_miners(json_file: str = 'user_data.json') -> dict:
             asic_views[id] = []
 
         for asic in asics:
-            asic_views[id].append(ASICview(asic['url'], asic['headers'], asic['min_hash']))
+            asic_views[id].append(ASICview(**asic))
 
     return asic_views
 
 
-def check_valid_user(id: str | int, json_file: str = 'user_data.json') -> str:
+def check_valid_user(id: str | int, json_file: str = '/root/Scripts/python-bot/asic_check_telegram_bot_v0.5/user_data.json') -> str:
     with open(json_file, 'r') as json_file:
         miners = json.load(json_file)
 
@@ -69,11 +70,11 @@ def change_watchdog_values(update, context, miners, update_type):
 
 if __name__ == '__main__':
     json_file = 'user_data.json'
-    # miners = deserialize_miners(json_file)
-    # print(miners)
+    miners = deserialize_miners(json_file)
+    print(miners)
 
-    # print(check_valid_user('2087011410'))
-    # print(check_valid_user('1054244799'))
-    # print(check_valid_user('0'))
+    print(check_valid_user('2087011410'))
+    print(check_valid_user('1054244799'))
+    print(check_valid_user('0'))
 
-    # print(WatchDogValues.TEMP["get"](ASICview('url', {'hello': 'world'}, 0, 80)))
+    print(WatchDogValues.TEMP["get"](ASICview('url', {'hello': 'world'}, 0, 80)))

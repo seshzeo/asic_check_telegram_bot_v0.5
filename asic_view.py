@@ -41,6 +41,14 @@ class ASICview(object):
         try:
             responce = requests.get(url=self._url + Endpoint.STATS, headers=self._headers)
         except Exception as e:
+
+
+            # 28.01.2025 "Durty" patch
+            if "HTTPSConnectionPool" in str(e):
+                return
+            #-------------------------
+
+
             self._state['error'] = str(e)
             return
 
@@ -72,9 +80,9 @@ class ASICview(object):
                 stats['chain'][0]['freq_avg'] +
                 stats['chain'][1]['freq_avg'] +
                 stats['chain'][2]['freq_avg'] ) / 3),
-            'temp1' : (stats['chain'][0]['temp_chip'][0], stats['chain'][0]['temp_chip'][3]),
-            'temp2' : (stats['chain'][1]['temp_chip'][0], stats['chain'][1]['temp_chip'][3]),
-            'temp3' : (stats['chain'][2]['temp_chip'][0], stats['chain'][2]['temp_chip'][3]),
+            'temp1' : stats['chain'][0]['temp_chip'],
+            'temp2' : stats['chain'][1]['temp_chip'],
+            'temp3' : stats['chain'][2]['temp_chip'],
             'fans' : stats['fan']
         }
        
@@ -113,9 +121,9 @@ Rig: {asic_type}
   Хэш средний: {hash_avg} {units}
   Частота: {freq}
   Температура:
-      {temp1[0]} - {temp1[1]} градусов
-      {temp2[0]} - {temp2[1]} градусов
-      {temp3[0]} - {temp3[1]} градусов
+      {' - '.join(map(str, temp1))} градусов
+      {' - '.join(map(str, temp2))} градусов
+      {' - '.join(map(str, temp3))} градусов
   Обороты куллеров:
       Вход: {fans[0]} - {fans[1]} об/мин
       Выход: {fans[2]} - {fans[3]} об/мин

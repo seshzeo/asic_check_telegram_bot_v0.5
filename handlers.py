@@ -2,16 +2,25 @@ from telegram.ext import ContextTypes
 from telegram import Update
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from utils import deserialize_miners, check_valid_user, change_watchdog_values, WatchDogValues
+from asic_view import ASICview
 
 
 miners = deserialize_miners()
 
-menu_keyboard = InlineKeyboardMarkup([
-    [InlineKeyboardButton('Стата', callback_data='state')],
-    [InlineKeyboardButton('Перезагрузить первый асик', callback_data='reboot0')],
-    [InlineKeyboardButton('Перезагрузить второй асик', callback_data='reboot1')]
-    ])
+menu_keyboard = [InlineKeyboardButton('Текущее состояние', callback_data='state')]
+    # [InlineKeyboardButton('Перезагрузить первый асик', callback_data='reboot0')],
+    # [InlineKeyboardButton('Перезагрузить второй асик', callback_data='reboot1')]
 
+def get_reboot_menu_keyboard(asics: list[ASICview]) -> list:
+    result: list = []
+    result.append(menu_keyboard)
+    for i in range(len(asics)):
+        result.append(
+            [InlineKeyboardButton(
+                f'Перезагрузить асик "{asics[i].get_name()}"',
+                                       callback_data=f'reboot{i}')])
+        
+    return InlineKeyboardMarkup(result)
 
 async def check_asic_notification(context):
     # нужно проверить асики на ошибки
@@ -53,7 +62,8 @@ async def change_min_hash(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
             chat_id = update.effective_chat.id,
             text = change_watchdog_values(update, context, miners, WatchDogValues.HASHRATE),
-            reply_markup=menu_keyboard
+            reply_markup = get_reboot_menu_keyboard(miners[str(update.effective_chat.id)])
+            # menu_keyboard
         )
     
     
@@ -65,7 +75,8 @@ async def change_max_temp(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
             chat_id = update.effective_chat.id,
             text = change_watchdog_values(update, context, miners, WatchDogValues.TEMP),
-            reply_markup=menu_keyboard
+            reply_markup = get_reboot_menu_keyboard(miners[str(update.effective_chat.id)])
+            # menu_keyboard
         )
 
 
@@ -86,13 +97,20 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             index = int(button_data[-1]) # взял последний символ текстового значения ответа кнопки и использую как индекс
             status = asics[index].reboot()
             answer = ''
+            name = asics[index].get_name()
             if status == 200:
-                answer = f'{asics[index]} Перезагрузка началась'
+                answer = f'{name} Перезагрузка началась'
             elif status >= 400 and status < 500:
-                answer = f'{asics[index]} Ошибка на строне клиента. '
+                answer = f'{name} Ошибка на строне клиента. '
             elif status >= 500 and status < 600:
-                answer = f'{asics[index]} Ошибка на строне сервера. '
-            await query.answer(answer)
+                answer = f'{name} Ошибка на строне сервера. '
+            # await query.answer(answer)
+            
+            await context.bot.send_message(
+                chat_id = update.effective_chat.id,
+                text = answer,
+                reply_markup = InlineKeyboardMarkup([menu_keyboard])
+            )
         # except IndexError as e:
         #     print('Error rebooting ASIC') #debug
         #     await query.answer(f'🔴 Индекс асика не найден. Error message: {e}')
@@ -100,7 +118,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
             chat_id = update.effective_chat.id,
             text = '🔴 Invalid command',
-            reply_markup=menu_keyboard
+            reply_markup = get_reboot_menu_keyboard(miners[str(update.effective_chat.id)])
+            # menu_keyboard
         )
 
 
@@ -113,7 +132,8 @@ async def say_hi(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id = update.effective_chat.id,
         text = 'Hi from bot',
-        reply_markup=menu_keyboard
+        reply_markup = get_reboot_menu_keyboard(miners[str(update.effective_chat.id)])
+        # menu_keyboard
     )
 
 
@@ -129,7 +149,8 @@ async def stat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id = update.effective_chat.id,
         text = ' '.join(parsed_info),
-        reply_markup=menu_keyboard
+        reply_markup = get_reboot_menu_keyboard(miners[str(update.effective_chat.id)])
+        # menu_keyboard
     )
 
 

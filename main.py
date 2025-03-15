@@ -4,11 +4,11 @@ import logging, os
 from dotenv import load_dotenv
  
 
-logging.basicConfig(
-    filename= 'logs.log',
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+# logging.basicConfig(
+#     filename= 'logs.log',
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#     level=logging.INFO
+# )
 
 load_dotenv()
 
