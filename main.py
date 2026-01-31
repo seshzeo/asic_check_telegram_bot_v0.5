@@ -1,14 +1,14 @@
 from telegram.ext import ApplicationBuilder, CommandHandler, JobQueue, CallbackQueryHandler
-from handlers import stat, say_hi, change_min_hash, button_handler, check_asic_notification, change_max_temp
+from handlers import get_logs, stat, say_hi, change_min_hash, button_handler, check_asic_notification, change_max_temp
 import logging, os
 from dotenv import load_dotenv
  
 
-# logging.basicConfig(
-#     filename= 'logs.log',
-#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-#     level=logging.INFO
-# )
+logging.basicConfig(
+    filename= 'logs.log',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
 
 load_dotenv()
 
@@ -27,7 +27,8 @@ if __name__ == '__main__':
         CommandHandler('stat', stat),
         CommandHandler('hi', say_hi),
         CommandHandler('minhash', change_min_hash),
-        CommandHandler('maxtemp', change_max_temp), 
+        CommandHandler('maxtemp', change_max_temp),
+        CommandHandler('logs', get_logs),
         CallbackQueryHandler(button_handler),
     ])
     # application.add_error_handler(error_handler)

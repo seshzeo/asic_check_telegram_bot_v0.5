@@ -1,3 +1,5 @@
+import datetime
+import logging
 import os
 from telegram.ext import ContextTypes
 from telegram import Update
@@ -125,16 +127,19 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def say_hi(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if 'Пользователь не найден' in (message := check_valid_user(update.effective_chat.id)):
+    if 'не найден' in (message := check_valid_user(update.effective_chat.id)):
         await update.message.reply_text(message)
         return
-
-    print('Hi from bot') #debug
+    MONTHS_RU = ('', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+                 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря')
+    dt = datetime.datetime.now()
+    greeting = f'Hi from bot.\nСейчас {dt.day} {MONTHS_RU[dt.month]} {dt.year} года {dt:%H:%M}'
+    logging.info(greeting)
+    print(greeting) #debug
     await context.bot.send_message(
         chat_id = update.effective_chat.id,
-        text = 'Hi from bot',
-        reply_markup = get_reboot_menu_keyboard(miners[str(update.effective_chat.id)])
-        # menu_keyboard
+        text = greeting,
+        reply_markup = InlineKeyboardMarkup([menu_keyboard])
     )
 
 
@@ -181,7 +186,7 @@ async def get_logs(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not check_admin_permissions(update.effective_chat.id):
         await update.message.reply_text('У вас нет прав на получение логов')
         return
-        
+
     MAX_LEN = 4000
 
     with open('logs.log', 'r', encoding='utf-8', errors='replace') as file:

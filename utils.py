@@ -20,7 +20,7 @@ class WatchDogValues():
     }
 
 
-def deserialize_miners(json_file: str = '/root/Scripts/python-bot/asic_check_telegram_bot_v0.5/user_data.json') -> dict:
+def deserialize_miners(json_file: str = 'user_data.json') -> dict:
     with open(json_file, 'r') as json_file:
         miners = json.load(json_file)
     
@@ -36,7 +36,7 @@ def deserialize_miners(json_file: str = '/root/Scripts/python-bot/asic_check_tel
     return asic_views
 
 
-def check_valid_user(id: str | int, json_file: str = '/root/Scripts/python-bot/asic_check_telegram_bot_v0.5/user_data.json') -> str:
+def check_valid_user(id: str | int, json_file: str = 'user_data.json') -> str:
     with open(json_file, 'r') as json_file:
         miners = json.load(json_file)
 
