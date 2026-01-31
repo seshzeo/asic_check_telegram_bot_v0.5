@@ -1,5 +1,5 @@
 from asic_view import ASICview
-import json
+import json, os
 
 
 class WatchDogValues():
@@ -66,7 +66,12 @@ def change_watchdog_values(update, context, miners, update_type):
                 change(asic, current)
             answer = f'Пороговое значение изменено на {input_value}'
     return answer
-    
+
+
+def check_admin_permissions(id: str | int, json_file: str = 'user_data.json') -> bool:
+    if str(id) == os.getenv('ADMIN_CHAT_ID'):
+        return True
+    return False
 
 if __name__ == '__main__':
     json_file = 'user_data.json'

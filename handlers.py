@@ -1,7 +1,8 @@
+import os
 from telegram.ext import ContextTypes
 from telegram import Update
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from utils import deserialize_miners, check_valid_user, change_watchdog_values, WatchDogValues
+from utils import check_admin_permissions, deserialize_miners, check_valid_user, change_watchdog_values, WatchDogValues
 from asic_view import ASICview
 
 
@@ -164,3 +165,32 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
                 chat_id=chat.id,
                 text=f"Произошла ошибка: {context.error}"
             )
+
+
+async def get_logs(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if 'не найден' in (message := check_valid_user(update.effective_chat.id)):
+        await update.message.reply_text(message)
+        return
+        
+
+    if not os.path.exists('logs.log'):
+        await update.message.reply_text('Логи не найдены')
+        return
+
+
+    if not check_admin_permissions(update.effective_chat.id):
+        await update.message.reply_text('У вас нет прав на получение логов')
+        return
+        
+    MAX_LEN = 4000
+
+    with open('logs.log', 'r', encoding='utf-8', errors='replace') as file:
+        logs = file.read()
+    
+    tail = logs[-MAX_LEN:]
+    
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"```log\n{tail}\n```",
+        parse_mode="Markdown"
+    )
