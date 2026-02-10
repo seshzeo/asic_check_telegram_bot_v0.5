@@ -173,6 +173,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
         text = exc.user_message
     else:
         text = "Произошла ошибка. Попробуйте позже."
+        logging.error(f"Произошла ошибка: {str(exc)}")
 
     # Отправка только если есть куда
     if update and isinstance(update, Update):
