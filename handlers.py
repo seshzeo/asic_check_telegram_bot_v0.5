@@ -6,6 +6,7 @@ from telegram import Update
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from utils import check_admin_permissions, deserialize_miners, check_valid_user, change_watchdog_values, WatchDogValues
 from asic_view import ASICview
+from exceptions import BotError
 
 
 miners = deserialize_miners()
@@ -160,16 +161,27 @@ async def stat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    # Проверяем, есть ли информация о чате
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    exc = context.error
+    if exc is None:
+        return
+
+    logging.exception("Unhandled exception in handler")
+
+    # Сообщение пользователю
+    if isinstance(exc, BotError):
+        text = exc.user_message
+    else:
+        text = "Произошла ошибка. Попробуйте позже."
+
+    # Отправка только если есть куда
     if update and isinstance(update, Update):
-        chat = update.effective_chat
+        chat = getattr(update, "effective_chat", None)
         if chat:
-            # Отправляем сообщение об ошибке в чат
-            await context.bot.send_message(
-                chat_id=chat.id,
-                text=f"Произошла ошибка: {context.error}"
-            )
+            try:
+                await context.bot.send_message(chat_id=chat.id, text=text)
+            except Exception:
+                logging.exception("Failed to send error message to user")
 
 
 async def get_logs(update: Update, context: ContextTypes.DEFAULT_TYPE):

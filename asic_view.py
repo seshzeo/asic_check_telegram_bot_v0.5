@@ -1,6 +1,8 @@
 from datetime import datetime
 import requests
 
+from exceptions import ASICConnectionError, ASICInvalidResponseError
+
 
 class Endpoint(): 
     __cgi = '/cgi-bin/'
@@ -39,36 +41,27 @@ class ASICview(object):
     # хранит как информацию о состояние асика или ошибку, если получение данных произошло
     # не успешно
         try:
-            responce = requests.get(url=self._url + Endpoint.STATS, headers=self._headers)
-        except Exception as e:
-
-
-            # 28.01.2025 "Durty" patch
-            if "HTTPSConnectionPool" in str(e):
-                return
-            #-------------------------
-
-
-            self._state['error'] = str(e)
+            response = requests.get(url=self._url + Endpoint.STATS, headers=self._headers, timeout=10)
+        except requests.RequestException as e:
+            if "Connection" in type(e).__name__ or "Pool" in str(type(e).__name__):
+                return  # тихо не обновлять при сетевой недоступности, если так задумано
+            raise ASICConnectionError(str(e)) from e
+    
+        if response.status_code != 200:
+            raise ASICInvalidResponseError(f"HTTP {response.status_code}")
+    
+        if 'Socket connect failed' in response.text:
+            self._state['error'] = response.text
             return
+    
+        try:
+            json_ = response.json()
+            status = json_['STATUS']
+            info = json_['INFO']
+            stats = json_['STATS'][0]
+        except (ValueError, KeyError) as e:
+            raise ASICInvalidResponseError(f"Неверный формат ответа: {e}") from e
 
-        if responce.status_code != 200:
-            title = responce.text.split('</title>')[0].split('<title>')[-1]
-            self._state['error'] = title
-            return
-        if 'Socket connect failed: Connection refused' in responce.text:
-            # self._state['error'] = 'Socket connect failed: Connection refused'
-            self._state['error'] = responce.text
-            return
-        
-        # Данный response возвращает json, в котором есть статус асика.
-        # json_['STATUS']['STATUS']. выдает строку 'S','W' или еще что-то.
-        # По хорошему это тоже надо обработать
-        
-        json_ = responce.json()
-        status = json_['STATUS']
-        info = json_['INFO']
-        stats = json_['STATS'][0]
         
         self._state = {
             'asic_type' : info['type'],
