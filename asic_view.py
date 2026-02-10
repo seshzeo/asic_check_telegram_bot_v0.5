@@ -41,7 +41,7 @@ class ASICview(object):
     # хранит как информацию о состояние асика или ошибку, если получение данных произошло
     # не успешно
         try:
-            response = requests.get(url=self._url + Endpoint.STATS, headers=self._headers, timeout=10)
+            response = requests.get(url=self._url + Endpoint.STATS, headers=self._headers, timeout=2, verify='keenetic.pem')
         except requests.RequestException as e:
             if "Connection" in type(e).__name__ or "Pool" in str(type(e).__name__):
                 return  # тихо не обновлять при сетевой недоступности, если так задумано
